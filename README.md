@@ -169,7 +169,7 @@ Test Coverage includes:
 
 Sample API Requests
 
-You can execute these requests using any HTTP client (e.g., cURL, Postman, or VS Code REST Client via [requests.http](file:///c:/Users/tosh2/Downloads/SAP project/requests.http)).
+You can execute these requests using any HTTP client (e.g., cURL, Postman, or VS Code REST Client via [requests.http](SAP project/requests.http)).
 
 Create a Product (with External Enrichment)
 
