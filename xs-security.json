@@ -1,0 +1,43 @@
+{
+  "xsappname": "supplier-product-management",
+  "tenant-mode": "dedicated",
+  "description": "Security configuration for Supplier Product Management API",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Viewer",
+      "description": "View products and suppliers"
+    },
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Manage products and suppliers"
+    },
+    {
+      "name": "$XSAPPNAME.Reviewer",
+      "description": "Submit product reviews"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Viewer",
+      "description": "Role template for viewer",
+      "scope-references": [
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Role template for administrator",
+      "scope-references": [
+        "$XSAPPNAME.Admin",
+        "$XSAPPNAME.Viewer"
+      ]
+    },
+    {
+      "name": "Reviewer",
+      "description": "Role template for submitting reviews",
+      "scope-references": [
+        "$XSAPPNAME.Reviewer"
+      ]
+    }
+  ]
+}

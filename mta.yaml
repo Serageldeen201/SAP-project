@@ -1,0 +1,59 @@
+_schema-version: '3.1'
+ID: supplier-product-management
+version: 1.0.0
+description: "Supplier Product Management Service on SAP BTP"
+
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install
+        - npm run build
+
+modules:
+  # -------------------- SERVER / SERVICE MODULE --------------------
+  - name: supplier-product-management-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1024M
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: supplier-product-management-db
+      - name: supplier-product-management-auth
+
+  # -------------------- DATABASE DEPLOYER MODULE -------------------
+  - name: supplier-product-management-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: supplier-product-management-db
+
+resources:
+  # -------------------- SAP HANA CLOUD DATABASE --------------------
+  - name: supplier-product-management-db
+    type: com.sap.xs.hdi-db
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  # -------------------- SAP XSUAA SECURITY SERVICE -----------------
+  - name: supplier-product-management-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: supplier-product-management-${org}-${space}
+        tenant-mode: dedicated

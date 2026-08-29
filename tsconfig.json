@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./srv",
+    "rootDir": "./srv",
+    "types": ["node", "mocha", "chai"]
+  },
+  "include": ["srv/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

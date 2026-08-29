@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Product Management - SAP CAP Launchpad</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --sap-brand-blue: #0070f2;
+            --sap-dark-blue: #0040b0;
+            --sap-bg: #f5f6f8;
+            --sap-card-bg: #ffffff;
+            --sap-border: #e2e8f0;
+        }
+        body {
+            background-color: var(--sap-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #334155;
+        }
+        .navbar-sap {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .card-custom {
+            border-radius: 12px;
+            border: 1px solid var(--sap-border);
+            background: var(--sap-card-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+        }
+        .badge-rating {
+            background-color: #fef08a;
+            color: #854d0e;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .badge-external {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .btn-primary-sap {
+            background-color: var(--sap-brand-blue);
+            border-color: var(--sap-brand-blue);
+            color: white;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+        .btn-primary-sap:hover {
+            background-color: var(--sap-dark-blue);
+            border-color: var(--sap-dark-blue);
+            color: white;
+        }
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 8px;
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-sap px-4 py-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-box-seam-fill fs-3 text-info"></i>
+                <div>
+                    <h5 class="m-0 fw-bold">Supplier Product Management Service</h5>
+                    <small class="text-light opacity-75">SAP Cloud Application Programming Model (CAP Node.js / TypeScript)</small>
+                </div>
+            </div>
+            <div>
+                <span class="badge bg-success py-2 px-3"><span class="status-dot"></span>Service Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        <!-- Action Toolbar -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h4 class="fw-bold mb-1">Product Catalog & Supplier Operations</h4>
+                <p class="text-muted m-0">Live interactive dashboard with real-time FakeStoreAPI external enrichment and review recalculations.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="loadAllData()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                <button class="btn btn-primary-sap" data-bs-toggle="modal" data-bs-target="#createProductModal"><i class="bi bi-plus-lg"></i> New Product</button>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reviewModal"><i class="bi bi-star-fill"></i> Submit Review</button>
+            </div>
+        </div>
+
+        <!-- Alert messages -->
+        <div id="alertPlaceholder"></div>
+
+        <!-- Products Table Card -->
+        <div class="card card-custom p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-grid-fill text-primary"></i> Products Overview</h5>
+                <span id="productCountBadge" class="badge bg-secondary">0 Products</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>External Rating (FakeStore)</th>
+                            <th>Average Customer Rating</th>
+                            <th>Supplier ID</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="7" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Loading products...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Suppliers Card -->
+            <div class="col-md-6">
+                <div class="card card-custom p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0"><i class="bi bi-building text-info"></i> Suppliers</h5>
+                        <span id="supplierCountBadge" class="badge bg-secondary">0 Suppliers</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Supplier Name</th>
+                                    <th>Email</th>
+                                    <th>Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suppliersTableBody">
+                                <tr><td colspan="3" class="text-center text-muted py-3">Loading suppliers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Reviews Card -->
+            <div class="col-md-6">
+                <div class="card card-custom p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold m-0"><i class="bi bi-chat-quote-fill text-warning"></i> Customer Reviews</h5>
+                        <span id="reviewCountBadge" class="badge bg-secondary">0 Reviews</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Reviewer</th>
+                                    <th>Rating</th>
+                                    <th>Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reviewsTableBody">
+                                <tr><td colspan="3" class="text-center text-muted py-3">Loading reviews...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Product Modal -->
+    <div class="modal fade" id="createProductModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Create New Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createProductForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Product Name *</label>
+                            <input type="text" class="form-control" id="prodName" required placeholder="e.g. Wireless Gaming Mouse">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Category *</label>
+                            <select class="form-select" id="prodCategory" required>
+                                <option value="electronics">electronics (FakeStoreAPI supported)</option>
+                                <option value="men's clothing">men's clothing (FakeStoreAPI supported)</option>
+                                <option value="women's clothing">women's clothing (FakeStoreAPI supported)</option>
+                                <option value="jewelery">jewelery (FakeStoreAPI supported)</option>
+                                <option value="custom-hardware">custom-hardware (Unmatched category test)</option>
+                            </select>
+                            <small class="text-muted">FakeStore categories will automatically populate the External Rating asynchronously.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Price ($) *</label>
+                            <input type="number" step="0.01" class="form-control" id="prodPrice" required placeholder="e.g. 49.99">
+                            <small class="text-muted">Server validates price &gt; 0. Try entering 0 or negative to test validation.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Supplier ID</label>
+                            <select class="form-select" id="prodSupplierSelect">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary-sap" onclick="submitCreateProduct()">Create & Enrich Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Review Action Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Submit Review (Custom Action: submitReview)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="submitReviewForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Select Product *</label>
+                            <select class="form-select" id="reviewProductSelect" required>
+                                <option value="">Select target product...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Rating (1 to 5) *</label>
+                            <select class="form-select" id="reviewRating" required>
+                                <option value="5">⭐⭐⭐⭐⭐ (5 - Excellent)</option>
+                                <option value="4">⭐⭐⭐⭐ (4 - Good)</option>
+                                <option value="3">⭐⭐⭐ (3 - Average)</option>
+                                <option value="2">⭐⭐ (2 - Poor)</option>
+                                <option value="1">⭐ (1 - Terrible)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Comment</label>
+                            <textarea class="form-control" id="reviewComment" rows="3" placeholder="Write feedback about the product quality..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="submitReviewAction()">Submit Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const authHeader = 'Basic ' + btoa('alice:');
+
+        function showAlert(msg, type = 'success') {
+            const el = document.getElementById('alertPlaceholder');
+            el.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${msg}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+        }
+
+        async function loadAllData() {
+            await Promise.all([loadProducts(), loadSuppliers(), loadReviews()]);
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch('/catalog/Products', { headers: { 'Authorization': authHeader } });
+                const json = await res.json();
+                const products = json.value || [];
+                document.getElementById('productCountBadge').textContent = `${products.length} Products`;
+
+                const tbody = document.getElementById('productsTableBody');
+                const selectRev = document.getElementById('reviewProductSelect');
+
+                if (products.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No products found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = products.map(p => `
+                    <tr>
+                        <td class="fw-bold">${p.name}</td>
+                        <td><span class="badge bg-light text-dark border">${p.category}</span></td>
+                        <td class="fw-semibold text-success">$${Number(p.price).toFixed(2)}</td>
+                        <td>${p.externalRating ? `<span class="badge-external"><i class="bi bi-cloud-arrow-down"></i> ${p.externalRating}</span>` : '<span class="text-muted small">N/A</span>'}</td>
+                        <td>${p.averageRating ? `<span class="badge-rating"><i class="bi bi-star-fill text-warning"></i> ${p.averageRating}</span>` : '<span class="text-muted small">No reviews</span>'}</td>
+                        <td><code class="small text-secondary">${p.supplier_ID ? p.supplier_ID.substring(0,8) + '...' : 'None'}</code></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="openReviewFor('${p.ID}')"><i class="bi bi-star"></i> Review</button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                selectRev.innerHTML = '<option value="">Select target product...</option>' +
+                    products.map(p => `<option value="${p.ID}">${p.name} ($${Number(p.price).toFixed(2)})</option>`).join('');
+
+            } catch (err) {
+                console.error(err);
+                showAlert('Failed to load products: ' + err.message, 'danger');
+            }
+        }
+
+        async function loadSuppliers() {
+            try {
+                const res = await fetch('/catalog/Suppliers', { headers: { 'Authorization': authHeader } });
+                const json = await res.json();
+                const suppliers = json.value || [];
+                document.getElementById('supplierCountBadge').textContent = `${suppliers.length} Suppliers`;
+
+                const tbody = document.getElementById('suppliersTableBody');
+                const selectProd = document.getElementById('prodSupplierSelect');
+
+                tbody.innerHTML = suppliers.map(s => `
+                    <tr>
+                        <td class="fw-semibold">${s.name}</td>
+                        <td><small class="text-muted">${s.email || '-'}</small></td>
+                        <td><span class="badge bg-warning text-dark">${s.rating} / 5</span></td>
+                    </tr>
+                `).join('');
+
+                selectProd.innerHTML = '<option value="">None</option>' +
+                    suppliers.map(s => `<option value="${s.ID}">${s.name}</option>`).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadReviews() {
+            try {
+                const res = await fetch('/catalog/ProductReviews?$top=10&$orderby=createdAt desc', { headers: { 'Authorization': authHeader } });
+                const json = await res.json();
+                const reviews = json.value || [];
+                document.getElementById('reviewCountBadge').textContent = `${reviews.length} Reviews`;
+
+                const tbody = document.getElementById('reviewsTableBody');
+                tbody.innerHTML = reviews.map(r => `
+                    <tr>
+                        <td class="fw-semibold">${r.reviewer || 'Anonymous'}</td>
+                        <td><span class="badge bg-warning text-dark">${r.rating} ⭐</span></td>
+                        <td><small>${r.comment || '<i class="text-muted">No comment</i>'}</small></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function openReviewFor(productId) {
+            document.getElementById('reviewProductSelect').value = productId;
+            const modal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            modal.show();
+        }
+
+        async function submitCreateProduct() {
+            const name = document.getElementById('prodName').value;
+            const category = document.getElementById('prodCategory').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const supplier_ID = document.getElementById('prodSupplierSelect').value || null;
+
+            if (!name || isNaN(price)) {
+                alert('Please enter valid product details.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/catalog/Products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader
+                    },
+                    body: JSON.stringify({ name, category, price, supplier_ID })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error ? data.error.message : 'Server error ' + res.status);
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('createProductModal')).hide();
+                document.getElementById('createProductForm').reset();
+                showAlert(`Product "<strong>${data.name}</strong>" created successfully! External rating applied: <strong>${data.externalRating || 'None'}</strong>`, 'success');
+                loadAllData();
+            } catch (err) {
+                showAlert(`Error creating product: ${err.message}`, 'danger');
+            }
+        }
+
+        async function submitReviewAction() {
+            const productID = document.getElementById('reviewProductSelect').value;
+            const rating = parseInt(document.getElementById('reviewRating').value);
+            const comment = document.getElementById('reviewComment').value;
+
+            if (!productID) {
+                alert('Please select a product.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/catalog/submitReview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authHeader
+                    },
+                    body: JSON.stringify({ productID, rating, comment })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error ? data.error.message : 'Server error ' + res.status);
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
+                document.getElementById('submitReviewForm').reset();
+                showAlert(`Review submitted! Recalculated average rating: <strong>${data.averageRating || rating}</strong>`, 'success');
+                loadAllData();
+            } catch (err) {
+                showAlert(`Error submitting review: ${err.message}`, 'danger');
+            }
+        }
+
+        window.onload = loadAllData;
+    </script>
+</body>
+</html>
